@@ -50,10 +50,6 @@ class Company
     foreach ($parent as $k=>$v) {
       if(isset($array[$v['id']])) {
         $v['children'] = $this->createTree($array, $array[$v['id']]);
-        foreach ($array[$v['id']] as $a) {
-          $index = $number = $this->exportNumberInString($v['id']);
-          $this->tree[$index] .= $a['id'] . '|';
-        }
       }
       $tree[] = $v;
     } 
@@ -108,7 +104,7 @@ class Company
     $this->totalParent();
     $this->appendPrice();
     $this->processResult();
-    // print_r($this->result);
+    print_r($this->result);
   }
 }
 class TestScript
