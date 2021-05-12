@@ -1,29 +1,36 @@
 <?php
 class Travel
 {
-    private $data;
-    public function __construct() {
-      $this->data = json_decode(file_get_contents('https://5f27781bf5d27e001612e057.mockapi.io/webprovise/travels'), true);
-    }
+  private $data;
+  private $price;
+  public function __construct() {
+    $this->data = json_decode(file_get_contents('./data/travels.json'), true);
+    $this->processPrice();
+  }
 
-    public function totalPriceByCompanyId($company) {
-      $price = 0;
-      foreach($this->data as $item) {
-        if($item['companyId'] == $company) $price += (float)$item['price'];
-      }
-      return $price;
+  public function getPrices() {
+    return $this->price;
+  }
+
+  public function processPrice() {
+    $this->price = [];
+    foreach($this->data as $item) {
+      if(!isset($this->price[$item['companyId']])) $this->price[$item['companyId']] = 0;
+      $this->price[$item['companyId']] += $item['price'];
     }
+  }
 }
 class Company
 {
   private $data;
-  private $travel;
   private $tree;
   private $total;
   private $result;
+  private $prices;
   public function __construct() {
-    $this->data = json_decode(file_get_contents('https://5f27781bf5d27e001612e057.mockapi.io/webprovise/companies'), true);
-    $this->travel = new Travel();
+    $this->data = json_decode(file_get_contents('./data/companies.json'), true);
+    $travel = new Travel();
+    $this->prices = $travel->getPrices();
   }
   public function getResult() {
     return $this->result;
@@ -60,11 +67,11 @@ class Company
       if(!isset($this->total[$k])) $this->total[$k] = 0;
       $v = trim($v, '|');
       $array = explode('|', $v);
-      $this->total[$k] += $this->travel->totalPriceByCompanyId('uuid-' . $k);
+      $this->total[$k] = $this->prices['uuid-' . $k];
       foreach ($array as $item) {
         $number = $this->exportNumberInString($item);
         if(isset($this->total[$number])) $this->total[$k] += $this->total[$number];
-        $this->total[$k] += $this->travel->totalPriceByCompanyId($item);
+        else $this->total[$k] += $this->prices[$item];
       }
     }
   }
@@ -77,7 +84,7 @@ class Company
     $tree = [];
     foreach ($this->data as $item) {
       $number = $this->exportNumberInString($item['id']);
-      $item['price'] = $this->travel->totalPriceByCompanyId($item['id']);
+      $item['price'] = $this->prices[$item['id']];
       if(isset($this->total[$number])) $item['price'] = $this->total[$number];
       $tree[] = $item;
     }
@@ -101,6 +108,7 @@ class Company
     $this->totalParent();
     $this->appendPrice();
     $this->processResult();
+    // print_r($this->result);
   }
 }
 class TestScript
@@ -110,7 +118,6 @@ class TestScript
         $start = microtime(true);
         $company = new Company();
         $company->main();
-        // var_dump($company->getResult());
         echo 'Total time: '.  (microtime(true) - $start);
     }
 }

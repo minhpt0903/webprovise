@@ -1,11 +1,12 @@
+# Thanks for supporting me to complete this task
+
 ### Command execute
 ```bash
 php app.php
 ```
 `Note`
 
-If you want to show the result of the task then you uncomment line 113. Thank you so much!
+If you want to show the result of the task then you uncomment line 111. Thank you so much!
 ```php
-// var_dump($company->getResult());
+// print_r($this->result);
 ```
-
